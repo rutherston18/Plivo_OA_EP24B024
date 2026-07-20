@@ -1,0 +1,13 @@
+2026-07-21 00:27:13,420 INFO    MainThread:124014 [wandb_setup.py:_flush():81] Current SDK version is 0.28.1
+2026-07-21 00:27:13,420 INFO    MainThread:124014 [wandb_setup.py:_flush():81] Configure stats pid to 124014
+2026-07-21 00:27:13,420 INFO    MainThread:124014 [wandb_setup.py:_flush():81] Loading settings from environment variables
+2026-07-21 00:27:13,420 INFO    MainThread:124014 [wandb_init.py:setup_run_log_directory():729] Logging user logs to /home/ruther/Code/PlivoOA/submission/wandb/run-20260721_002713-rwtheoma/logs/debug.log
+2026-07-21 00:27:13,421 INFO    MainThread:124014 [wandb_init.py:setup_run_log_directory():730] Logging internal logs to /home/ruther/Code/PlivoOA/submission/wandb/run-20260721_002713-rwtheoma/logs/debug-internal.log
+2026-07-21 00:27:13,421 INFO    MainThread:124014 [wandb_init.py:init():772] calling init triggers
+2026-07-21 00:27:13,421 INFO    MainThread:124014 [wandb_init.py:init():777] wandb.init called with sweep_config: {}
+config: {'data': '../llm_handout/data/train_corpus.txt', 'steps': 2000, 'batch': 8, 'optimizer': 'muon', 'lr': 0.001, 'muon_lr': 0.02, 'muon_momentum': 0.95, 'muon_weight_decay': 0.0, 'weight_decay': 0.1, 'beta1': 0.9, 'beta2': 0.95, 'grad_clip': 1.0, 'warmup': 100, 'warmdown_ratio': 0.4, 'final_lr_frac': 0.0, 'seed': 1337, 'out': 'ckpt.pt', 'log_every': 100, 'arch': None, 'n_layer': None, 'n_embd': None, 'n_head': None, 'block_size': None, 'tie_weights': True, 'mlp_act': None, 'no_mlp': False, 'mlp_mult': None, 'ssm_state': None, 'ssm_expand': None, 'dt_rank': None, 'hybrid_swa_layer': None, 'eval_every': 100, 'eval_file': '../llm_handout/data/dev_eval.txt', 'eval_bytes': 20000, 'wandb': True, 'wandb_project': 'plivo-llm-speedrun', 'wandb_mode': 'online', 'run_name': 'e4_bpe_tie', 'tag': 'e4_bpe_tie', 'archive_dir': '../experiments', 'n_params': 1392640, '_wandb': {}}
+2026-07-21 00:27:13,421 INFO    MainThread:124014 [wandb_init.py:init():820] starting backend
+2026-07-21 00:27:13,725 INFO    MainThread:124014 [wandb_init.py:init():835] sending inform_init request
+2026-07-21 00:27:13,853 INFO    MainThread:124014 [wandb_init.py:init():840] backend started and connected
+2026-07-21 00:27:13,891 INFO    MainThread:124014 [wandb_init.py:init():910] updated telemetry
+2026-07-21 00:27:13,899 INFO    MainThread:124014 [wandb_init.py:init():933] communicating run to backend with 90.0 second timeout

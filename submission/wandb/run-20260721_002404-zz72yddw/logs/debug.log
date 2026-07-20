@@ -1,0 +1,23 @@
+2026-07-21 00:24:04,124 INFO    MainThread:122985 [wandb_setup.py:_flush():81] Current SDK version is 0.28.1
+2026-07-21 00:24:04,125 INFO    MainThread:122985 [wandb_setup.py:_flush():81] Configure stats pid to 122985
+2026-07-21 00:24:04,125 INFO    MainThread:122985 [wandb_setup.py:_flush():81] Loading settings from environment variables
+2026-07-21 00:24:04,125 INFO    MainThread:122985 [wandb_init.py:setup_run_log_directory():729] Logging user logs to /home/ruther/Code/PlivoOA/submission/wandb/run-20260721_002404-zz72yddw/logs/debug.log
+2026-07-21 00:24:04,125 INFO    MainThread:122985 [wandb_init.py:setup_run_log_directory():730] Logging internal logs to /home/ruther/Code/PlivoOA/submission/wandb/run-20260721_002404-zz72yddw/logs/debug-internal.log
+2026-07-21 00:24:04,125 INFO    MainThread:122985 [wandb_init.py:init():772] calling init triggers
+2026-07-21 00:24:04,125 INFO    MainThread:122985 [wandb_init.py:init():777] wandb.init called with sweep_config: {}
+config: {'n_params': 1339840, 'steps': 2000, 'desc': 'Starter GPT, byte tokenizer, Adam const-LR', '_wandb': {}}
+2026-07-21 00:24:04,126 INFO    MainThread:122985 [wandb_init.py:init():820] starting backend
+2026-07-21 00:24:04,445 INFO    MainThread:122985 [wandb_init.py:init():835] sending inform_init request
+2026-07-21 00:24:06,588 INFO    MainThread:122985 [wandb_init.py:init():840] backend started and connected
+2026-07-21 00:24:06,630 INFO    MainThread:122985 [wandb_init.py:init():910] updated telemetry
+2026-07-21 00:24:06,638 INFO    MainThread:122985 [wandb_init.py:init():933] communicating run to backend with 90.0 second timeout
+2026-07-21 00:24:07,728 INFO    MainThread:122985 [wandb_init.py:init():978] starting run threads in backend
+2026-07-21 00:24:07,922 INFO    MainThread:122985 [wandb_run.py:_console_start():2621] atexit reg
+2026-07-21 00:24:07,922 INFO    MainThread:122985 [wandb_run.py:_redirect():2471] redirect: wrap_raw
+2026-07-21 00:24:07,922 INFO    MainThread:122985 [wandb_run.py:_redirect():2540] Wrapping output streams.
+2026-07-21 00:24:07,922 INFO    MainThread:122985 [wandb_run.py:_redirect():2563] Redirects installed.
+2026-07-21 00:24:07,924 INFO    MainThread:122985 [wandb_init.py:init():1016] run started, returning control to user process
+2026-07-21 00:24:09,052 INFO    MainThread:122985 [wandb_run.py:_finish():2383] finishing run jerrycloud3316-ai-club-iit-madras/plivo-llm-speedrun/zz72yddw
+2026-07-21 00:24:09,053 INFO    MainThread:122985 [wandb_run.py:_atexit_cleanup():2588] got exitcode: 0
+2026-07-21 00:24:09,054 INFO    MainThread:122985 [wandb_run.py:_restore():2570] restore
+2026-07-21 00:24:09,054 INFO    MainThread:122985 [wandb_run.py:_restore():2576] restore done

@@ -1,0 +1,20 @@
+2026-07-21 00:25:23,318 INFO    MainThread:122985 [wandb_init.py:setup_run_log_directory():729] Logging user logs to /home/ruther/Code/PlivoOA/submission/wandb/run-20260721_002523-2hde9o5h/logs/debug.log
+2026-07-21 00:25:23,318 INFO    MainThread:122985 [wandb_init.py:setup_run_log_directory():730] Logging internal logs to /home/ruther/Code/PlivoOA/submission/wandb/run-20260721_002523-2hde9o5h/logs/debug-internal.log
+2026-07-21 00:25:23,318 INFO    MainThread:122985 [wandb_init.py:init():772] calling init triggers
+2026-07-21 00:25:23,319 INFO    MainThread:122985 [wandb_init.py:init():777] wandb.init called with sweep_config: {}
+config: {'n_params': 1310720, 'steps': 2000, 'desc': 'Muon optimizer (Newton-Schulz)', '_wandb': {}}
+2026-07-21 00:25:23,319 INFO    MainThread:122985 [wandb_init.py:init():820] starting backend
+2026-07-21 00:25:23,319 INFO    MainThread:122985 [wandb_init.py:init():835] sending inform_init request
+2026-07-21 00:25:25,347 INFO    MainThread:122985 [wandb_init.py:init():840] backend started and connected
+2026-07-21 00:25:25,348 INFO    MainThread:122985 [wandb_init.py:init():910] updated telemetry
+2026-07-21 00:25:25,352 INFO    MainThread:122985 [wandb_init.py:init():933] communicating run to backend with 90.0 second timeout
+2026-07-21 00:25:26,358 INFO    MainThread:122985 [wandb_init.py:init():978] starting run threads in backend
+2026-07-21 00:25:26,536 INFO    MainThread:122985 [wandb_run.py:_console_start():2621] atexit reg
+2026-07-21 00:25:26,536 INFO    MainThread:122985 [wandb_run.py:_redirect():2471] redirect: wrap_raw
+2026-07-21 00:25:26,536 INFO    MainThread:122985 [wandb_run.py:_redirect():2540] Wrapping output streams.
+2026-07-21 00:25:26,536 INFO    MainThread:122985 [wandb_run.py:_redirect():2563] Redirects installed.
+2026-07-21 00:25:26,537 INFO    MainThread:122985 [wandb_init.py:init():1016] run started, returning control to user process
+2026-07-21 00:25:27,764 INFO    MainThread:122985 [wandb_run.py:_finish():2383] finishing run jerrycloud3316-ai-club-iit-madras/plivo-llm-speedrun/2hde9o5h
+2026-07-21 00:25:27,765 INFO    MainThread:122985 [wandb_run.py:_atexit_cleanup():2588] got exitcode: 0
+2026-07-21 00:25:27,766 INFO    MainThread:122985 [wandb_run.py:_restore():2570] restore
+2026-07-21 00:25:27,766 INFO    MainThread:122985 [wandb_run.py:_restore():2576] restore done
