@@ -86,3 +86,46 @@ corpus now cached to `.corpus_ids_v1024.pt` to skip the ~22s re-encode per run.
 plenty of headroom under the 2M cap to reinvest in depth/width (E5) or an SSM backbone
 (E7). Infra note: wandb switched to **offline** mode + fail-safe init (a wandb timeout
 can no longer abort a multi-minute run); corpus-id caching added.
+
+---
+
+## E5 — SwiGLU MLP + reinvest freed params (deeper stack)
+**Hypothesis:** E4's weight tying freed ~600k params under the 2M cap. Spend them on
+(a) more depth and (b) a SwiGLU MLP, which gives more capacity per parameter than a
+plain 4× ReLU² MLP.
+
+**Changed (model.py already had SwiGLU; via CLI):** `--mlp_act swiglu --mlp_mult 3
+--n_layer 5 --n_embd 160 --tie_weights`, Muon. Params 1,392,640 → **1,827,840**
+(deeper: 4→5 blocks; SwiGLU adds a 3rd matrix per MLP). 2000 steps, ~388 ms/step.
+
+**Result:** dev bpb **1.8583 → 1.8385** (−0.020 vs E4; −0.533 / **−22.5%** vs baseline).
+
+**Conclusion:** a small further win. Doubling params (1.39M→1.83M) buys only ~1% — the
+returns from width/depth are clearly diminishing at a fixed 2000-step budget; the
+binding constraint is data/steps, not capacity. Better to spend effort on the token
+representation (E6 n-gram) and a more sample-efficient backbone (E7 SSM) than on more
+params. Per-step cost rose (266→388 ms) for little gain, so E7 SSM stays the priority.
+
+---
+
+## E6 — Hashed n-gram (Engram) embeddings
+**Hypothesis:** E5 showed extra params/depth barely move bpb, so capacity isn't the
+bottleneck — the *input representation* is. Cheap hashed bigram/trigram lookups give the
+model instant local (spelling/morphology) memory, freeing attention+depth for
+higher-level structure. This is the param-efficient "family 2" idea.
+
+**Changed (model.py NgramEmbed + train.py CLI):** causal hashed n-gram embeddings,
+orders {2,3}, 1536 buckets/order, zero-init (starts as a no-op, learns to use them).
+Added to the token embedding. Base is the **same 4-layer d160 ReLU² stack as E4** (so
+this isolates the n-gram effect), Muon. Params 1,392,640 → **1,884,160** (+491k in two
+hash tables → AdamW). Verified causal: n-gram at position t ignores tokens > t.
+
+**Result:** dev bpb **1.8583 → 1.8225** (−0.036 vs E4; −0.549 / **−23.2%** vs baseline).
+~291 ms/step, 583s. Beats E5 (1.8385) despite E5 being *deeper* (5 layers) at similar
+param count.
+
+**Conclusion:** best result so far, and the key finding: at equal params, **n-gram
+memory beats depth**. The token representation is a better place to spend budget than
+width/depth. n-gram tables + Muon + BPE + tying compose cleanly. Next: E7 — a selective
+SSM backbone (the explicitly-requested direction), more sample-efficient per step and
+cache-friendly on CPU; can layer n-gram on top later.

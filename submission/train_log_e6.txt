@@ -1,0 +1,37 @@
+corpus: 7,318,592 bytes -> 3,313,863 tokens (vocab 1024) [cached]
+arch=transformer n_layer=4 n_embd=160 tie=True mlp=relu2x4(use=True) ngram=(2, 3)x1536 ssm(N=64,exp=2,dt=16,swa@-1)
+model: 1,884,160 params
+Muon params: 1,228,800 | AdamW params: 655,360
+step     1  loss 7.0110  lrm 0.010  (345 ms/step)
+step   100  loss 5.2185  lrm 1.000  (283 ms/step)
+  [eval] step 200 dev bpb 2.4871
+step   200  loss 3.9272  lrm 1.000  (286 ms/step)
+step   300  loss 3.6131  lrm 1.000  (285 ms/step)
+  [eval] step 400 dev bpb 2.2640
+step   400  loss 3.3965  lrm 1.000  (294 ms/step)
+step   500  loss 3.2517  lrm 1.000  (296 ms/step)
+  [eval] step 600 dev bpb 2.1137
+step   600  loss 3.1249  lrm 1.000  (296 ms/step)
+step   700  loss 3.0531  lrm 1.000  (295 ms/step)
+  [eval] step 800 dev bpb 2.0425
+step   800  loss 2.9798  lrm 1.000  (294 ms/step)
+step   900  loss 2.9207  lrm 1.000  (292 ms/step)
+  [eval] step 1000 dev bpb 1.9925
+step  1000  loss 2.8687  lrm 1.000  (291 ms/step)
+step  1100  loss 2.8525  lrm 1.000  (289 ms/step)
+  [eval] step 1200 dev bpb 1.9586
+step  1200  loss 2.8034  lrm 1.000  (290 ms/step)
+step  1300  loss 2.7655  lrm 0.876  (289 ms/step)
+  [eval] step 1400 dev bpb 1.9122
+step  1400  loss 2.7366  lrm 0.751  (291 ms/step)
+step  1500  loss 2.6965  lrm 0.626  (290 ms/step)
+  [eval] step 1600 dev bpb 1.8702
+step  1600  loss 2.6559  lrm 0.501  (291 ms/step)
+step  1700  loss 2.6283  lrm 0.376  (291 ms/step)
+  [eval] step 1800 dev bpb 1.8370
+step  1800  loss 2.6060  lrm 0.251  (292 ms/step)
+step  1900  loss 2.5642  lrm 0.126  (291 ms/step)
+  [eval] step 2000 dev bpb 1.8191
+step  2000  loss 2.5524  lrm 0.001  (291 ms/step)
+saved ckpt_e6.pt  (583s total)
+archived run -> ../experiments/e6_ngram

@@ -49,6 +49,9 @@ class Config:
     dt_rank = 16
     ssm_conv = 4
     hybrid_swa_layer = -1      # index of the single attention layer in an SSM stack (-1 = none)
+    # hashed n-gram embeddings (family 2): causal token n-gram -> hash bucket -> emb
+    ngram_orders = ()          # e.g. (2, 3); empty = disabled
+    ngram_buckets = 0          # rows per order's hash table
 
 
 def rmsnorm(x):
@@ -176,6 +179,32 @@ class MLP(nn.Module):
         return self.proj(x)
 
 
+class NgramEmbed(nn.Module):
+    """Causal hashed n-gram embeddings. For each order n and position t, hash the
+    tokens (t-n+1 .. t) into `buckets` and look up a learned vector, summed into the
+    token embedding. Only uses *input* tokens (<= t), so it's causal / leak-free.
+    Cheap local spelling/morphology memory that frees attention+depth for structure."""
+    def __init__(self, cfg):
+        super().__init__()
+        self.orders = tuple(cfg.ngram_orders)
+        self.buckets = int(cfg.ngram_buckets)
+        self.tables = nn.ModuleDict(
+            {str(n): nn.Embedding(self.buckets, cfg.n_embd) for n in self.orders})
+
+    def forward(self, idx):
+        out = 0
+        for n in self.orders:
+            h = torch.zeros_like(idx)
+            for k in range(n):
+                if k == 0:
+                    tok = idx
+                else:
+                    tok = torch.cat([torch.zeros_like(idx[:, :k]), idx[:, :-k]], dim=1)
+                h = (h * 1000003 + tok + 1) % self.buckets
+            out = out + self.tables[str(n)](h)
+        return out
+
+
 class Block(nn.Module):
     def __init__(self, cfg, is_attn):
         super().__init__()
@@ -203,6 +232,8 @@ class GPT(nn.Module):
         self.pos_emb = None
         if cfg.arch == "transformer" and not cfg.use_rope:
             self.pos_emb = nn.Embedding(cfg.block_size, cfg.n_embd)
+        self.ngram = (NgramEmbed(cfg)
+                      if cfg.ngram_orders and cfg.ngram_buckets > 0 else None)
         self.drop = nn.Dropout(cfg.dropout)
 
         def layer_is_attn(i):
@@ -232,6 +263,9 @@ class GPT(nn.Module):
                     nn.init.zeros_(b.mix.out_proj.weight)
                 if b.use_mlp:
                     nn.init.zeros_(b.mlp.down.weight if cfg.mlp_act == "swiglu" else b.mlp.proj.weight)
+        if self.ngram is not None:
+            for t in self.ngram.tables.values():
+                nn.init.zeros_(t.weight)
 
     def _init(self, m):
         if isinstance(m, nn.Linear):
@@ -246,6 +280,8 @@ class GPT(nn.Module):
         x = self.tok_emb(idx)
         if self.pos_emb is not None:
             x = x + self.pos_emb(torch.arange(T, device=idx.device))[None]
+        if self.ngram is not None:
+            x = x + self.ngram(idx)
         x = self.drop(x)
         cos = self.rope_cos if self.use_rope else None
         sin = self.rope_sin if self.use_rope else None

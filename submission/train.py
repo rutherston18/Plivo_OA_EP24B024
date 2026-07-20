@@ -167,6 +167,8 @@ def main():
     ap.add_argument("--ssm_expand", type=int, default=None)
     ap.add_argument("--dt_rank", type=int, default=None)
     ap.add_argument("--hybrid_swa_layer", type=int, default=None)
+    ap.add_argument("--ngram_orders", default="", help="comma list, e.g. '2,3' (empty=off)")
+    ap.add_argument("--ngram_buckets", type=int, default=None)
     # Evaluation during training (for wandb bpb-vs-step charts)
     ap.add_argument("--eval_every", type=int, default=0, help="log dev bpb every N steps (0=off)")
     ap.add_argument("--eval_file", default="../llm_handout/data/dev_eval.txt")
@@ -212,8 +214,13 @@ def main():
         cfg.tie_weights = True
     if args.no_mlp:
         cfg.use_mlp = False
+    if args.ngram_orders:
+        cfg.ngram_orders = tuple(int(x) for x in args.ngram_orders.split(",") if x.strip())
+    if args.ngram_buckets is not None:
+        cfg.ngram_buckets = args.ngram_buckets
     print(f"arch={cfg.arch} n_layer={cfg.n_layer} n_embd={cfg.n_embd} "
           f"tie={cfg.tie_weights} mlp={cfg.mlp_act}x{cfg.mlp_mult}(use={cfg.use_mlp}) "
+          f"ngram={cfg.ngram_orders}x{cfg.ngram_buckets} "
           f"ssm(N={cfg.ssm_state},exp={cfg.ssm_expand},dt={cfg.dt_rank},swa@{cfg.hybrid_swa_layer})")
     model = GPT(cfg).to(device)
     n = model.n_params()

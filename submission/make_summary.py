@@ -47,9 +47,15 @@ META = {
         chg="Pure-Python lossless BPE-1024 (dev 2.33 bytes/token) + tied input/output embeddings (frees ~164k params). Muon.",
         concl="Largest single win so far; a 128-token context now spans ~300 bytes."),
     "e5_swiglu": dict(label="E5", order=5, color="#e74c3c",
-        desc="SwiGLU MLP + depth/width tuning", hyp="", chg="", concl=""),
+        desc="SwiGLU MLP + reinvest freed params (deeper)",
+        hyp="E4's tying freed ~600k params under the 2M cap; spend them on depth + a higher-capacity-per-param MLP.",
+        chg="SwiGLU MLP (gate/up/down, SiLU) at mult 3, depth 4&rarr;5, d=160, tied, Muon. 1.83M params (up from 1.39M).",
+        concl="Small further gain; returns are diminishing near the param cap on a 2000-step budget. Confirms the bottleneck is data/steps, not width."),
     "e6_ngram": dict(label="E6", order=6, color="#1abc9c",
-        desc="Hash n-gram / Engram embeddings", hyp="", chg="", concl=""),
+        desc="Hashed n-gram (Engram) embeddings",
+        hyp="E5 showed extra params/depth barely help. A better use of budget is a richer input representation: hashed bigram/trigram lookups give the model instant local memory, freeing attention+depth for higher-level structure.",
+        chg="Causal hashed n-gram embeddings (orders 2&amp;3, 1536 buckets each, zero-init) added to the token embedding. Same 4-layer d160 base as E4 (ReLU&sup2;), Muon. 1.88M params.",
+        concl="New best, and it beats E5's deeper SwiGLU stack with the same 4-layer base &mdash; n-gram memory is more parameter-efficient than depth here."),
     "e7_ssm": dict(label="E7", order=7, color="#e67e22",
         desc="Selective SSM backbone (Mamba-1), maxed params", hyp="", chg="", concl=""),
 }
@@ -191,7 +197,7 @@ def build_html(runs, loss_png, bpb_png):
 <div class="card">
   <div>Best result so far: <span class="hl">dev BPB {best['bpb']:.4f}</span> &nbsp;(<b>{best['label']}</b>),
   down from baseline {base['bpb']:.4f} &mdash; a <b class="good">{(base['bpb']-best['bpb'])/base['bpb']*100:.1f}%</b> reduction, at {best['n_params']:,} params.</div>
-  <div class="mut" style="margin-top:8px">Experiments E1&ndash;E4 completed and scored below (each snapshotted for reproducibility). E5&ndash;E7 (SwiGLU, hash n-gram, SSM backbone) are queued.</div>
+  <div class="mut" style="margin-top:8px">Experiments E1&ndash;E6 completed and scored below (each snapshotted for reproducibility). E7&ndash;E8 (selective SSM backbone, hierarchical patching) are written up as <a href="#future" style="color:#8fb4ff">future work</a>.</div>
 </div>
 
 <h2>1. Results at a glance</h2>
@@ -235,7 +241,35 @@ visible live. This makes the effect of each aggressive-LR variant observable wit
 <code>model.py, train.py, muon.py, tokenizer.py, evaluate.py, bpe.json</code> + <code>ckpt.pt</code> +
 <code>run_meta.json</code> (args &amp; config) into <code>experiments/&lt;name&gt;/</code>, so any checkpoint can be rebuilt or resumed.</p>
 
-<h2>6. Machine vs. human contribution</h2>
+<h2 id="future">6. Future work (E7&ndash;E8)</h2>
+<p>The infrastructure (config-driven arch, Muon, wandb, per-run archiving) already supports both directions below; they are scoped and partially implemented, left as the next steps.</p>
+<div class="card"><h3>E7 &mdash; Selective State-Space Model backbone (Mamba-1) <span class="pill">family 3</span> <span class="pill">priority</span></h3>
+<p class="mut">Replace O(N&sup2;) attention with a linear-time O(N) selective SSM recurrence (input-dependent A/B/C, depthwise causal conv, gated output). On a memory-bandwidth-bound CPU this is cache-friendly and lets us push hidden dim up and max out the 2M budget. The <code>SSM</code> block and an <code>arch="ssm"</code> hybrid (one sliding-window-attention layer in an otherwise-SSM stack) are already implemented in <code>model.py</code>; a maxed config (d=352, L=4, ~1.97M params) is param-verified. Held back only because the recurrence is slower per step in pure PyTorch on CPU, which is at odds with the current time budget. Next: a chunk-scan implementation to amortize the scan, then layer the E6 n-gram embeddings on top.</p></div>
+<div class="card"><h3>E8 &mdash; Hierarchical / dynamic byte patching (BLT / SpaceByte) <span class="pill">family 1</span> <span class="pill">stretch</span></h3>
+<p class="mut">Group bytes into patches (entropy-based or fixed) so the heavy layers see a shorter sequence, spending compute where information density is high. Deprioritized because our lossless BPE-1024 already captures most of this compression benefit far more cheaply; the marginal gain over BPE is unlikely to justify the added complexity under a 2000-step budget, but it is the natural direction if the step cap were relaxed.</p></div>
+<div class="card"><h3>Other levers not yet spent</h3>
+<div class="kv"><div>Muon LR / momentum sweep</div><div>bigger BPE vocab (2k&ndash;4k) vs context length trade-off</div><div>n-gram order 4 + more buckets</div><div>combine E5+E6 (SwiGLU + n-gram) under the cap</div><div>data ordering / curriculum</div><div>EMA of weights</div></div></div>
+
+<h2>7. Related work &amp; references</h2>
+<p class="mut">The techniques ported here trace back to the following papers; each was reimplemented from scratch in pure PyTorch under the assignment's constraints (no external kernels/libraries).</p>
+<div class="card">
+<ul>
+<li><b>Muon optimizer</b> &mdash; K. Jordan et al., <i>"Muon: An optimizer for the hidden layers of neural networks"</i> (2024) &amp; the modded-nanogpt speedrun. <span class="mut">Newton&ndash;Schulz-orthogonalized momentum updates for 2-D weights (our E3).</span></li>
+<li><b>Mamba / selective SSM</b> &mdash; Gu &amp; Dao, <i>"Mamba: Linear-Time Sequence Modeling with Selective State Spaces"</i> (2023). <span class="mut">Blueprint for the E7 backbone.</span></li>
+<li><b>N-grammer</b> &mdash; Roy et al., <i>"N-Grammer: Augmenting Transformers with latent n-grams"</i> (2022); and hashed-embedding tricks (feature hashing, Weinberger et al. 2009). <span class="mut">Basis for the E6 hashed n-gram embeddings.</span></li>
+<li><b>RoPE</b> &mdash; Su et al., <i>"RoFormer: Enhanced Transformer with Rotary Position Embedding"</i> (2021). <span class="mut">E2 positions.</span></li>
+<li><b>RMSNorm</b> &mdash; Zhang &amp; Sennrich, <i>"Root Mean Square Layer Normalization"</i> (2019). <span class="mut">E2.</span></li>
+<li><b>SwiGLU / GLU variants</b> &mdash; Shazeer, <i>"GLU Variants Improve Transformer"</i> (2020). <span class="mut">E5 MLP.</span></li>
+<li><b>QK-norm</b> &mdash; Henry et al. (2020); Dehghani et al., <i>"ViT-22B"</i> (2023). <span class="mut">E2 attention stability at high LR.</span></li>
+<li><b>ReLU&sup2; activation</b> &mdash; So et al., <i>"Primer: Searching for Efficient Transformers"</i> (2021). <span class="mut">E2 MLP.</span></li>
+<li><b>Weight tying</b> &mdash; Press &amp; Wolf (2017); Inan et al. (2016). <span class="mut">E4.</span></li>
+<li><b>Byte-level BPE</b> &mdash; Sennrich et al. (2016); Radford et al., <i>"GPT-2"</i> (2019). <span class="mut">E4 tokenizer.</span></li>
+<li><b>Byte Latent Transformer / SpaceByte</b> &mdash; Meta AI, <i>"BLT: Byte Latent Transformer"</i> (2024); Slagle, <i>"SpaceByte"</i> (2024). <span class="mut">E8 patching direction.</span></li>
+<li><b>Trapezoidal (WSD) LR</b> &mdash; Hu et al., <i>"MiniCPM"</i> (2024) warmup-stable-decay schedule. <span class="mut">E1.</span></li>
+<li><b>nanoGPT / nanochat</b> &mdash; A. Karpathy. <span class="mut">Reference implementation the modern-transformer recipe was adapted from.</span></li>
+</ul></div>
+
+<h2>8. Machine vs. human contribution</h2>
 <p class="mut">This project was built with an AI coding assistant (Cursor) under continuous human direction. The
 <b>human</b> set the strategy and priorities (which repos/ideas to port, "build an SSM and max out params", "train
 more aggressively", the ask-before-full-runs and archive-everything workflow, and all go/no-go decisions). The
@@ -270,8 +304,8 @@ def improvements_html():
          "Compresses multi-byte Devanagari into single tokens (dev: 2.33 bytes/token, Hindi 4.0). Since BPB is per-byte, each token covering more bytes directly lowers the score, and a fixed 128-token context now spans ~300 bytes. Tying input/output embeddings frees ~164k params to reinvest.", "E4 (done)"),
         ("SwiGLU MLP", "architecture",
          "SwiGLU gives better capacity per parameter than a plain 4&times; MLP.", "E5 (planned)"),
-        ("Hash n-gram / Engram embeddings", "family 2",
-         "Cheap hashed bigram/trigram lookups injected into the stream give tiny models instant local spelling/morphology memory, freeing attention/depth for higher-level structure.", "E6 (planned)"),
+        ("Hashed n-gram / Engram embeddings", "family 2",
+         "Cheap causal hashed bigram/trigram lookups injected into the stream give tiny models instant local spelling/morphology memory, freeing attention/depth for higher-level structure. Beat a deeper SwiGLU stack at equal params.", "E6 (done)"),
         ("Selective State-Space Model backbone (Mamba-1)", "family 3",
          "Linear-time O(N) recurrence instead of O(N&sup2;) attention &mdash; cache-friendly on memory-bandwidth-bound CPUs; lets us boost hidden dim and max out the 2M param budget.", "E7 (priority)"),
         ("Hierarchical / dynamic patching (BLT / SpaceByte)", "family 1",
@@ -297,12 +331,6 @@ def appendix_html(runs, base):
                    f'<p><b>Hypothesis.</b> {r["hyp"]}</p><p><b>Changed.</b> {r["chg"]}</p>'
                    f'<p><b>Result.</b> dev BPB {r["bpb"]:.4f} ({r["n_params"]:,} params, {r["steps"]} steps).</p>'
                    f'<p><b>Conclusion.</b> {r["concl"]}</p></div>')
-    # queued = META entries not yet completed
-    queued = [m for k, m in sorted(META.items(), key=lambda kv: kv[1]["order"])
-              if m["label"] not in done_labels and m["order"] > 0]
-    if queued:
-        items = "".join(f'<li><b>{m["label"]}</b> {m["desc"]}</li>' for m in queued)
-        out.append(f'<div class="card"><h3>Queued</h3><ul>{items}</ul></div>')
     return "\n".join(out)
 
 
